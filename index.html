@@ -86,7 +86,7 @@
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     let currentUser = null;
-    let currentUserId = null; // ✅ store UUID
+    let currentUserId = null;
     let files = [];
     let currentFile = null;
 
@@ -103,7 +103,7 @@
 
       if (data) {
         currentUser = data.username;
-        currentUserId = data.id;   // ✅ store UUID
+        currentUserId = data.id;
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app').style.display = 'flex';
         loadFiles();
@@ -118,7 +118,7 @@
       if (!msg) return;
 
       await supabase.from('messages').insert({
-        user_id: currentUserId,   // ✅ use UUID
+        username: currentUser,
         content: msg
       });
 
@@ -130,7 +130,7 @@
         .channel('chat')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
           const chatBox = document.getElementById('chat-box');
-          chatBox.innerHTML += `<p><b>${payload.new.user_id}:</b> ${payload.new.content}</p>`;
+          chatBox.innerHTML += `<p><b>${payload.new.username}:</b> ${payload.new.content}</p>`;
         })
         .subscribe();
     }
@@ -140,7 +140,7 @@
       if (!filename) return;
 
       const { data } = await supabase.from('files').insert({
-        user_id: currentUserId,   // ✅ use UUID
+        user_id: currentUserId,
         filename: filename,
         content: ''
       }).select();
