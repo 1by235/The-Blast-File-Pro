@@ -78,14 +78,14 @@
     </div>
   </div>
 
-  <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-
+  <!-- ✅ Use a non-module script so supabase is global -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
     const supabaseUrl = "https://mgdxcajqxxsnvmawatqv.supabase.co";
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nZHhjYWpxeHhzbnZtYXdhdHF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Mzg1MzQsImV4cCI6MjA3OTMxNDUzNH0.TJL43L_durQ9UKnj_IGbT3w0wVCT2yLBbpbkqHPK_CU";
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-    // ✅ Expose globally for debugging in console
+    // ✅ Expose globally for GitHub Pages debugging
     window.supabase = supabase;
 
     let currentUser = null;
@@ -93,7 +93,7 @@
     let files = [];
     let currentFile = null;
 
-    window.login = async function() {
+    async function login() {
       const u = document.getElementById('username').value;
       const p = document.getElementById('password').value;
 
@@ -114,9 +114,10 @@
       } else {
         document.getElementById('login-error').innerText = "Access Denied ⚡";
       }
-    };
+    }
+    window.login = login;
 
-    window.sendMessage = async function() {
+    async function sendMessage() {
       const msg = document.getElementById('chat-input').value;
       if (!msg) return;
 
@@ -126,20 +127,21 @@
       });
 
       document.getElementById('chat-input').value = '';
-    };
+    }
+    window.sendMessage = sendMessage;
 
     function subscribeChat() {
       supabase
         .channel('chat')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-          console.log("New message payload:", payload); // ✅ debug log
+          console.log("New message payload:", payload);
           const chatBox = document.getElementById('chat-box');
           chatBox.innerHTML += `<p><b>${payload.new.username}:</b> ${payload.new.content}</p>`;
         })
         .subscribe();
     }
 
-    window.newFile = async function() {
+    async function newFile() {
       const filename = prompt("Enter file name:");
       if (!filename) return;
 
@@ -152,9 +154,10 @@
       files.push(data[0]);
       currentFile = data[0];
       renderTabs();
-    };
+    }
+    window.newFile = newFile;
 
-    window.saveFile = async function() {
+    async function saveFile() {
       if (!currentFile) return;
       const content = document.getElementById('file-content').value;
 
@@ -163,7 +166,8 @@
         .eq('id', currentFile.id);
 
       alert("File saved ⚡");
-    };
+    }
+    window.saveFile = saveFile;
 
     async function loadFiles() {
       const { data } = await supabase.from('files').select('*').eq('user_id', currentUserId);
@@ -187,4 +191,5 @@
   </script>
 </body>
 </html>
+
 
