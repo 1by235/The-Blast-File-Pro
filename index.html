@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>The Blast File 2.0</title>
+  <style>
+    body {
+      background: black;
+      color: #00f0ff;
+      font-family: 'Orbitron', sans-serif;
+    }
+    h1, h2 {
+      text-shadow: 0 0 10px #00f0ff, 0 0 20px #0077ff;
+    }
+    #login-screen {
+      text-align: center;
+      margin-top: 20vh;
+    }
+    input, button, textarea {
+      background: #111;
+      border: 1px solid #00f0ff;
+      color: #00f0ff;
+      padding: 10px;
+      margin: 5px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px #00f0ff;
+    }
+    #app {
+      display: flex;
+      height: 100vh;
+    }
+    #sidebar {
+      width: 30%;
+      border-right: 2px solid #00f0ff;
+      padding: 10px;
+      overflow-y: auto;
+    }
+    #editor {
+      flex: 1;
+      padding: 10px;
+    }
+    #tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    #tabs div {
+      padding: 5px 10px;
+      background: #222;
+      cursor: pointer;
+      border: 1px solid #00f0ff;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div id="login-screen">
+    <h1>The Blast File 2.0</h1>
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="login()">Enter</button>
+    <p id="login-error"></p>
+  </div>
+
+  <div id="app" style="display:none;">
+    <div id="sidebar">
+      <h2>⚡ Chat</h2>
+      <div id="chat-box"></div>
+      <input id="chat-input" placeholder="Type message...">
+      <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <div id="editor">
+      <div id="tabs"></div>
+      <textarea id="file-content"></textarea>
+      <button onclick="saveFile()">Save</button>
+      <button onclick="newFile()">New File</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+    const supabaseUrl = "https://mgdxcajqxxsnvmawatqv.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nZHhjYWpxeHhzbnZtYXdhdHF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Mzg1MzQsImV4cCI6MjA3OTMxNDUzNH0.TJL43L_durQ9UKnj_IGbT3w0wVCT2yLBbpbkqHPK_CU";
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    let currentUser = null;
+    let currentUserId = null; // ✅ store UUID
+    let files = [];
+    let currentFile = null;
+
+    window.login = async function() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', u)
+        .eq('password', p)
+        .single();
+
+      if (data) {
+        currentUser = data.username;
+        currentUserId = data.id;   // ✅ store UUID
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        loadFiles();
+        subscribeChat();
+      } else {
+        document.getElementById('login-error').innerText = "Access Denied ⚡";
+      }
+    };
+
+    window.sendMessage = async function() {
+      const msg = document.getElementById('chat-input').value;
+      if (!msg) return;
+
+      await supabase.from('messages').insert({
+        user_id: currentUserId,   // ✅ use UUID
+        content: msg
+      });
+
+      document.getElementById('chat-input').value = '';
+    };
+
+    function subscribeChat() {
+      supabase
+        .channel('chat')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+          const chatBox = document.getElementById('chat-box');
+          chatBox.innerHTML += `<p><b>${payload.new.user_id}:</b> ${payload.new.content}</p>`;
+        })
+        .subscribe();
+    }
+
+    window.newFile = async function() {
+      const filename = prompt("Enter file name:");
+      if (!filename) return;
+
+      const { data } = await supabase.from('files').insert({
+        user_id: currentUserId,   // ✅ use UUID
+        filename: filename,
+        content: ''
+      }).select();
+
+      files.push(data[0]);
+      currentFile = data[0];
+      renderTabs();
+    };
+
+    window.saveFile = async function() {
+      if (!currentFile) return;
+      const content = document.getElementById('file-content').value;
+
+      await supabase.from('files')
+        .update({ content })
+        .eq('id', currentFile.id);
+
+      alert("File saved ⚡");
+    };
+
+    async function loadFiles() {
+      const { data } = await supabase.from('files').select('*').eq('user_id', currentUserId);
+      files = data || [];
+      renderTabs();
+    }
+
+    function renderTabs() {
+      const tabs = document.getElementById('tabs');
+      tabs.innerHTML = "";
+      files.forEach(file => {
+        const tab = document.createElement('div');
+        tab.innerText = file.filename;
+        tab.onclick = () => {
+          currentFile = file;
+          document.getElementById('file-content').value = file.content;
+        };
+        tabs.appendChild(tab);
+      });
+    }
+  </script>
+</body>
+</html>
