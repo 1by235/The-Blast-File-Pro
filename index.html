@@ -1,91 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>The Blast File 2.0</title>
+  <meta charset="UTF-8" />
+  <title>Blast File 2.0</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    :root {
+      --bg: #0b0f1a;
+      --panel: #12182a;
+      --accent: #6cf1ff;
+      --accent-2: #8a5cff;
+      --text: #e9f3ff;
+      --muted: #94a3b8;
+      --danger: #ff5577;
+      --success: #34d399;
+    }
+    * { box-sizing: border-box }
     body {
-      background: black;
-      color: #00f0ff;
-      font-family: 'Orbitron', sans-serif;
+      margin: 0;
+      background: radial-gradient(1200px 600px at 30% -10%, #101932 0%, #0b0f1a 45%, #05080f 100%);
+      color: var(--text);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
     }
-    h1, h2 {
-      text-shadow: 0 0 10px #00f0ff, 0 0 20px #0077ff;
+    header {
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(8px);
+      background: linear-gradient(0deg, rgba(18,24,42,0.65), rgba(18,24,42,0.65));
+      border-bottom: 1px solid #1f2b46;
     }
-    #login-screen {
-      text-align: center;
-      margin-top: 20vh;
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 700 }
+    .brand .logo {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: conic-gradient(from 180deg at 50% 50%, var(--accent), var(--accent-2), var(--accent));
+      box-shadow: 0 0 24px rgba(108,241,255,0.5);
     }
+    .auth { display: flex; gap: 8px; align-items: center }
     input, button, textarea {
-      background: #111;
-      border: 1px solid #00f0ff;
-      color: #00f0ff;
-      padding: 10px;
-      margin: 5px;
-      border-radius: 5px;
-      box-shadow: 0 0 10px #00f0ff;
+      font: inherit;
+      color: var(--text);
+      background: var(--panel);
+      border: 1px solid #243453;
+      border-radius: 10px;
+      padding: 10px 12px;
+      outline: none;
     }
-    #app {
-      display: flex;
-      height: 100vh;
+    input::placeholder, textarea::placeholder { color: var(--muted) }
+    button { cursor: pointer; transition: 0.2s }
+    button:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(138,92,255,0.25) }
+    .primary {
+      background: linear-gradient(90deg, #6cf1ff, #8a5cff);
+      color: #0b0f1a; border: none; font-weight: 700;
     }
-    #sidebar {
-      width: 30%;
-      border-right: 2px solid #00f0ff;
-      padding: 10px;
-      overflow-y: auto;
+    .grid { display: grid; grid-template-columns: 360px 1fr; gap: 18px; padding: 18px }
+    .panel {
+      background: rgba(18,24,42,0.6);
+      border: 1px solid #1f2b46;
+      border-radius: 16px;
+      box-shadow: 0 14px 40px rgba(0,0,0,0.35);
+      overflow: hidden;
     }
-    #editor {
-      flex: 1;
-      padding: 10px;
-    }
-    #tabs {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-    }
-    #tabs div {
-      padding: 5px 10px;
-      background: #222;
-      cursor: pointer;
-      border: 1px solid #00f0ff;
-      border-radius: 5px;
-    }
+    .panel h2 { margin: 0; padding: 14px 16px; border-bottom: 1px solid #1f2b46; font-size: 14px; color: var(--muted) }
+    .chat-container { display: flex; flex-direction: column; height: 520px }
+    .chat-list { flex: 1; padding: 16px; overflow-y: auto }
+    .chat-item { margin-bottom: 12px; display: flex; gap: 10px }
+    .chat-avatar { width: 34px; height: 34px; border-radius: 8px; background: linear-gradient(180deg, #6cf1ff, #8a5cff) }
+    .chat-bubble { background: #12182a; border: 1px solid #243453; border-radius: 12px; padding: 8px 10px; max-width: 70% }
+    .bubble-header { font-size: 12px; color: var(--muted); margin-bottom: 6px }
+    .bubble-img { max-width: 340px; border-radius: 10px; border: 1px solid #243453; margin-top: 6px }
+    .chat-input-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; padding: 12px; border-top: 1px solid #1f2b46 }
+    .files-container { display: grid; grid-template-columns: 1fr; height: 520px }
+    .file-tabs { display: flex; gap: 8px; padding: 10px; border-bottom: 1px solid #1f2b46; overflow-x: auto }
+    .file-tab { padding: 8px 12px; border: 1px solid #243453; border-radius: 10px; background: #12182a; cursor: pointer }
+    .file-editor { display: grid; grid-template-rows: 1fr auto; height: calc(520px - 46px) }
+    .file-editor textarea { width: 100%; height: 100%; resize: none }
+    .row { display: flex; gap: 8px; padding: 10px; border-top: 1px solid #1f2b46 }
+    .status { padding: 6px 10px; border-radius: 10px; font-size: 12px; background: #0f1426; border: 1px solid #243453 }
+    .error { color: var(--danger) }
+    .success { color: var(--success) }
   </style>
 </head>
 <body>
-  <div id="login-screen">
-    <h1>The Blast File 2.0</h1>
-    <input id="username" placeholder="Username">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="login()">Enter</button>
-    <p id="login-error"></p>
-  </div>
-
-  <div id="app" style="display:none;">
-    <div id="sidebar">
-      <h2>⚡ Chat</h2>
-      <div id="chat-box"></div>
-      <input id="chat-input" placeholder="Type message...">
-      <button onclick="sendMessage()">Send</button>
+  <header>
+    <div class="brand"><div class="logo"></div><div>Blast File 2.0</div></div>
+    <div class="auth">
+      <input id="username" placeholder="Username">
+      <input id="password" type="password" placeholder="Password">
+      <button class="primary" id="login-btn">Enter</button>
+      <span id="login-status" class="status"></span>
     </div>
+  </header>
 
-    <div id="editor">
-      <div id="tabs"></div>
-      <textarea id="file-content"></textarea>
-      <button onclick="saveFile()">Save</button>
-      <button onclick="newFile()">New File</button>
-    </div>
-  </div>
+  <main class="grid">
+    <section class="panel">
+      <h2>Chat</h2>
+      <div class="chat-container">
+        <div id="chat-list" class="chat-list"></div>
+        <div class="chat-input-row">
+          <input id="chat-text" placeholder="Type a message…" />
+          <input id="chat-image" type="file" accept="image/*" />
+          <button id="chat-send">Send</button>
+        </div>
+      </div>
+    </section>
 
-  <!-- ✅ Use a non-module script so supabase is global -->
+    <section class="panel">
+      <h2>Files</h2>
+      <div class="files-container">
+        <div id="file-tabs" class="file-tabs"></div>
+        <div class="file-editor">
+          <textarea id="file-content" placeholder="Write…"></textarea>
+          <div class="row">
+            <button id="file-new">New file</button>
+            <button id="file-save" class="primary">Save</button>
+            <span id="file-status" class="status"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const supabaseUrl = "https://mgdxcajqxxsnvmawatqv.supabase.co";
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nZHhjYWpxeHhzbnZtYXdhdHF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Mzg1MzQsImV4cCI6MjA3OTMxNDUzNH0.TJL43L_durQ9UKnj_IGbT3w0wVCT2yLBbpbkqHPK_CU";
     const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
-
-    // ✅ Expose globally for GitHub Pages debugging
     window.supabase = supabase;
 
     let currentUser = null;
@@ -93,101 +134,135 @@
     let files = [];
     let currentFile = null;
 
-    async function login() {
-      const u = document.getElementById('username').value;
-      const p = document.getElementById('password').value;
+    const el = (id) => document.getElementById(id);
 
+    function renderMessage(msg) {
+      const item = document.createElement('div');
+      item.className = 'chat-item';
+      const avatar = document.createElement('div');
+      avatar.className = 'chat-avatar';
+              img.src = msg.image_url;
+        bubble.appendChild(img);
+      }
+      item.appendChild(avatar);
+      item.appendChild(bubble);
+      el('chat-list').appendChild(item);
+      el('chat-list').scrollTop = el('chat-list').scrollHeight;
+    }
+
+    async function loadMessages() {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .order('created_at', { ascending: true });
+      if (error) { console.error(error); return; }
+      el('chat-list').innerHTML = '';
+      data.forEach(renderMessage);
+    }
+
+    async function sendMessage() {
+      const text = el('chat-text').value.trim();
+      let image_url = null;
+      if (el('chat-image').files[0]) {
+        const file = el('chat-image').files[0];
+        const path = `${currentUser}-${Date.now()}-${file.name}`;
+        const { data: up, error: upErr } = await supabase
+          .storage.from('chat-media')
+          .upload(path, file);
+        if (!upErr) {
+          const { data: pub } = supabase.storage.from('chat-media').getPublicUrl(path);
+          image_url = pub.publicUrl;
+        }
+      }
+      if (!text && !image_url) return;
+      await supabase.from('messages').insert({ username: currentUser, content: text || null, image_url });
+      el('chat-text').value = '';
+      el('chat-image').value = '';
+    }
+
+    function subscribeChat() {
+      supabase.channel('chat-stream')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+          renderMessage(payload.new);
+        })
+        .subscribe();
+    }
+
+    async function loadFiles() {
+      const { data, error } = await supabase
+        .from('files')
+        .select('*')
+        .eq('user_id', currentUserId);
+      if (error) { console.error(error); return; }
+      files = data || [];
+      renderTabs();
+    }
+
+    function renderTabs() {
+      fileTabs.innerHTML = '';
+      files.forEach(f => {
+        const tab = document.createElement('div');
+        tab.className = 'file-tab';
+        tab.textContent = f.filename;
+        tab.onclick = () => {
+          currentFile = f;
+          el('file-content').value = f.content || '';
+        };
+        fileTabs.appendChild(tab);
+      });
+    }
+
+    async function newFile() {
+      const filename = prompt('Enter file name:');
+      if (!filename) return;
+      const { data, error } = await supabase
+        .from('files')
+        .insert({ user_id: currentUserId, filename, content: '' })
+        .select();
+      if (!error) {
+        files.push(data[0]);
+        currentFile = data[0];
+        renderTabs();
+      }
+    }
+
+    async function saveFile() {
+      if (!currentFile) return;
+      await supabase.from('files')
+        .update({ content: el('file-content').value })
+        .eq('id', currentFile.id);
+      el('file-status').textContent = 'Saved';
+      setTimeout(() => el('file-status').textContent = '', 1500);
+    }
+
+    async function login() {
+      const u = el('username').value.trim();
+      const p = el('password').value.trim();
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('username', u)
         .eq('password', p)
         .single();
-
-      if (data) {
-        currentUser = data.username;
-        currentUserId = data.id;
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
-        loadFiles();
-        subscribeChat();
-      } else {
-        document.getElementById('login-error').innerText = "Access Denied ⚡";
+      if (error || !data) {
+        el('login-status').textContent = 'Access Denied';
+        el('login-status').className = 'status error';
+        return;
       }
-    }
-    window.login = login;
-
-    async function sendMessage() {
-      const msg = document.getElementById('chat-input').value;
-      if (!msg) return;
-
-      await supabase.from('messages').insert({
-        username: currentUser,   // ✅ store username
-        content: msg
-      });
-
-      document.getElementById('chat-input').value = '';
-    }
-    window.sendMessage = sendMessage;
-
-    function subscribeChat() {
-      supabase
-        .channel('chat')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-          console.log("New message payload:", payload);
-          const chatBox = document.getElementById('chat-box');
-          chatBox.innerHTML += `<p><b>${payload.new.username}:</b> ${payload.new.content}</p>`;
-        })
-        .subscribe();
+      currentUser = data.username;
+      currentUserId = data.id;
+      el('login-status').textContent = `Welcome, ${currentUser}`;
+      el('login-status').className = 'status success';
+      await loadMessages();
+      subscribeChat();
+      await loadFiles();
     }
 
-    async function newFile() {
-      const filename = prompt("Enter file name:");
-      if (!filename) return;
-
-      const { data } = await supabase.from('files').insert({
-        user_id: currentUserId,
-        filename: filename,
-        content: ''
-      }).select();
-
-      files.push(data[0]);
-      currentFile = data[0];
-      renderTabs();
-    }
-    window.newFile = newFile;
-
-    async function saveFile() {
-      if (!currentFile) return;
-      const content = document.getElementById('file-content').value;
-
-      await supabase.from('files')
-        .update({ content })
-        .eq('id', currentFile.id);
-
-      alert("File saved ⚡");
-    }
-    window.saveFile = saveFile;
-
-    async function loadFiles() {
-      const { data } = await supabase.from('files').select('*').eq('user_id', currentUserId);
-      files = data || [];
-      renderTabs();
-    }
-
-    function renderTabs() {
-      const tabs = document.getElementById('tabs');
-      tabs.innerHTML = "";
-      files.forEach(file => {
-        const tab = document.createElement('div');
-        tab.innerText = file.filename;
-        tab.onclick = () => {
-          currentFile = file;
-          document.getElementById('file-content').value = file.content;
-        };
-        tabs.appendChild(tab);
-      });
-    }
+    // Event bindings
+    el('login-btn').addEventListener('click', login);
+    el('chat-send').addEventListener('click', sendMessage);
+    el('file-new').addEventListener('click', newFile);
+    el('file-save').addEventListener('click', saveFile);
   </script>
 </body>
 </html>
