@@ -85,6 +85,9 @@
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1nZHhjYWpxeHhzbnZtYXdhdHF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM3Mzg1MzQsImV4cCI6MjA3OTMxNDUzNH0.TJL43L_durQ9UKnj_IGbT3w0wVCT2yLBbpbkqHPK_CU";
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // ✅ Expose globally for debugging in console
+    window.supabase = supabase;
+
     let currentUser = null;
     let currentUserId = null;
     let files = [];
@@ -118,7 +121,7 @@
       if (!msg) return;
 
       await supabase.from('messages').insert({
-        username: currentUser,
+        username: currentUser,   // ✅ store username
         content: msg
       });
 
@@ -129,6 +132,7 @@
       supabase
         .channel('chat')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+          console.log("New message payload:", payload); // ✅ debug log
           const chatBox = document.getElementById('chat-box');
           chatBox.innerHTML += `<p><b>${payload.new.username}:</b> ${payload.new.content}</p>`;
         })
@@ -183,3 +187,4 @@
   </script>
 </body>
 </html>
+
